@@ -32,11 +32,11 @@ func (r *router) Handle(path string, method string, handlers ...RequestHandler) 
 }
 
 func (r *router) Validate(v Validator) {
-	r.Validator = r.Validator
+	r.Validator = v
 }
 
 func (r *router) Bind(b Binder) {
-	r.Binder = r.Binder
+	r.Binder = b
 }
 
 func (r *router) Use(handlers ...RequestHandler) Router {

@@ -13,6 +13,8 @@ type virtualHost struct {
 	middlewares      []RequestHandler
 	afterMiddlewares []RequestHandler
 	errorHandler     ErrorHandler
+	Binder           Binder
+	Validator        Validator
 }
 
 func (v *virtualHost) Handle(path string, method string, handlers ...RequestHandler) *Route {
@@ -21,6 +23,8 @@ func (v *virtualHost) Handle(path string, method string, handlers ...RequestHand
 		Method:       method,
 		Handlers:     handlers,
 		ErrorHandler: v.errorHandler,
+		Validator:    v.Validator,
+		Binder:       v.Binder,
 	}
 	v.routes = append(v.routes, route)
 
@@ -35,6 +39,14 @@ func (v *virtualHost) Use(handlers ...RequestHandler) Router {
 	v.middlewares = append(v.middlewares, handlers...)
 
 	return v
+}
+
+func (vh *virtualHost) Validate(v Validator) {
+	vh.Validator = v
+}
+
+func (vh *virtualHost) Bind(b Binder) {
+	vh.Binder = b
 }
 
 func (v *virtualHost) After(handlers ...RequestHandler) Router {
