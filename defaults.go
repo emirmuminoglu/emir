@@ -7,12 +7,20 @@ import (
 )
 
 const (
-	DefaultNetwork     = "tcp4"
-	DefaultAddress     = "localhost:8080"
-	DefaultServerName  = "emir"
+	//DefaultNetwork is the default listen network
+	DefaultNetwork = "tcp4"
+
+	//DefaultAddress is the default listen address
+	DefaultAddress = "localhost:8080"
+
+	//DefaultServerName is the default server name
+	DefaultServerName = "emir"
+
+	//DefaultReadTimeout is the default read timeout
 	DefaultReadTimeout = 20 * time.Second
 )
 
+// DefaultLogger creates a empty development logger
 func DefaultLogger() *zap.Logger {
 	logger, err := zap.NewDevelopment()
 	if err != nil {

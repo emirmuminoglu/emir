@@ -42,10 +42,12 @@ func (r *Route) HandleError(handler ErrorHandler) {
 	r.ErrorHandler = handler
 }
 
+// Validate registers given validator as validator to the route
 func (r *Route) Validate(v Validator) {
 	r.Validator = v
 }
 
+// Bind registers given binder as binder to the route
 func (r *Route) Bind(b Binder) {
 	r.Binder = b
 }

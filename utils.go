@@ -28,6 +28,7 @@ func S2B(s string) (b []byte) {
 	return
 }
 
+// ConvertArgsToValues converts given fasthttp.Args to url.Values
 func ConvertArgsToValues(args *fasthttp.Args) url.Values {
 	var values url.Values
 	args.VisitAll(func(key, value []byte) {

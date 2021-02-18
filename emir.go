@@ -10,6 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+// Emir is the top-level framework instance
 type Emir struct {
 	server       *fasthttp.Server
 	fastrouter   *fastrouter.Router
@@ -19,6 +20,7 @@ type Emir struct {
 	Router
 }
 
+// Router is the registry of all registered routes.
 type Router interface {
 	// Handle registers given request handlers with the given path and method
 	// There are shortcuts for some methods you can use them.
@@ -69,6 +71,7 @@ type Router interface {
 	HandleError(handler ErrorHandler)
 }
 
+// New creates an instance of Emir
 func New(cfg Config) *Emir {
 	cfg = setDefaults(cfg)
 	frouter := newRouter(cfg)
@@ -85,6 +88,7 @@ func New(cfg Config) *Emir {
 	return emir
 }
 
+// NewVirtualHost creates a new router group for the provided hostname
 func (e *Emir) NewVirtualHost(hostname string) Router {
 	frouter := newRouter(e.cfg)
 	v := &virtualHost{
@@ -96,6 +100,7 @@ func (e *Emir) NewVirtualHost(hostname string) Router {
 	return v
 }
 
+// Handler returns router's request handler.
 func (e *Emir) Handler() fasthttp.RequestHandler {
 	e.Router.Handler()
 	handler := func(ctx *fasthttp.RequestCtx) {
@@ -116,6 +121,8 @@ func (e *Emir) Handler() fasthttp.RequestHandler {
 	return handler
 }
 
+// ListenAndServe serves the server.
+// It serves the server gracefully if #Config.GracefullShutdown is true
 func (e *Emir) ListenAndServe() error {
 	ln, err := net.Listen(e.cfg.Network, e.cfg.Addr)
 	if err != nil {
@@ -129,6 +136,7 @@ func (e *Emir) ListenAndServe() error {
 	return e.Serve(ln)
 }
 
+// ServeGracefully serves gracefully the server with given listener.  
 func (e *Emir) ServeGracefully(ln net.Listener) error {
 	listenErr := make(chan error, 1)
 
@@ -148,6 +156,7 @@ func (e *Emir) ServeGracefully(ln net.Listener) error {
 	}
 }
 
+// Serve serves the server with given listener.
 func (e *Emir) Serve(ln net.Listener) error {
 	defer ln.Close()
 
@@ -167,6 +176,7 @@ func (e *Emir) Serve(ln net.Listener) error {
 	return e.server.Serve(ln)
 }
 
+// Shutdown shuts the server
 func (e *Emir) Shutdown() error {
 	return e.server.Shutdown()
 }

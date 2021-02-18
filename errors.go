@@ -27,6 +27,7 @@ func ReleaseBasicError(err *BasicError) {
 	errorPool.Put(err)
 }
 
+// BasicError represents an error that occured while handling a request
 type BasicError struct {
 	StatusCode   int
 	ErrorMessage string      `json:"message"`
