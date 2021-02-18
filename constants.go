@@ -253,4 +253,5 @@ const (
 	ContentTypeApplicationForm = "application/x-www-form-urlencoded"
 	ContentTypeTextXML         = "text/xml"
 	ContentTypeTextHTML        = "text/html"
+	ContentTypeTextPlain       = "text/plain"
 )
