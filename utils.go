@@ -1,8 +1,11 @@
 package emir
 
 import (
+	"net/url"
 	"reflect"
 	"unsafe"
+
+	"github.com/valyala/fasthttp"
 )
 
 // B2S converts byte slice to a string without memory allocation.
@@ -23,4 +26,14 @@ func S2B(s string) (b []byte) {
 	bh.Len = sh.Len
 
 	return
+}
+
+func ConvertArgsToValues(args *fasthttp.Args) url.Values {
+	var values url.Values
+	args.VisitAll(func(key, value []byte) {
+		keyStr := B2S(key)
+		values[keyStr] = append(values[keyStr], B2S(value))
+	})
+
+	return values
 }

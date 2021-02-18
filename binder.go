@@ -8,13 +8,19 @@ import (
 	"github.com/pasztorpisti/qs"
 )
 
+// Binder is the interface that wraps the Bind method.
 type Binder interface {
 	Bind(c Context, v interface{}) error
 }
 
+// DefaultBinder is the default implementation of the Binder interface.
 type DefaultBinder struct {
 }
 
+// Bind implements the Binder#Bind function. Binding is done in following order:
+// Binder will bind the body first then binds the query params
+// If the request method is not POST, PUT or PATCH then the binder will skip the body
+// Struct tag for query params will be "qs".
 func (*DefaultBinder) Bind(c Context, v interface{}) error {
 	req := c.Req()
 	contentType := B2S(req.Header.ContentType())
@@ -33,11 +39,11 @@ func (*DefaultBinder) Bind(c Context, v interface{}) error {
 				return err
 			}
 		case strings.HasPrefix(contentType, ContentTypeApplicationForm):
-			if err := qs.Unmarshal(v, B2S(c.PostArgs().QueryString())); err != nil {
+			if err := qs.UnmarshalValues(v, ConvertArgsToValues(c.QueryArgs())); err != nil {
 				return err
 			}
 		}
 	}
 
-	return qs.Unmarshal(v, B2S(c.QueryArgs().QueryString()))
+	return qs.UnmarshalValues(v, ConvertArgsToValues(c.QueryArgs()))
 }
