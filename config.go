@@ -11,8 +11,13 @@ import (
 
 // Config carries configuration for FasthHTTP server and Router
 type Config struct {
-	Network                            string
-	Addr                               string
+	Network     string
+	Addr        string
+	Compress    bool
+	TLS         bool
+	CertFile    string
+	CertKeyFile string
+
 	GracefulShutdown                   bool
 	ErrorHandler                       ErrorHandler
 	Logger                             *zap.Logger
@@ -41,11 +46,17 @@ type Config struct {
 	NoDefaultContentType               bool
 	ConnState                          func(net.Conn, fasthttp.ConnState)
 	KeepHijackedConns                  bool
-	SaveMatchedRoutePath               bool
-	GlobalOPTIONS                      RequestHandler
-	NotFound                           RequestHandler
-	MethodNotAllowed                   RequestHandler
-	PanicHandler                       func(Context, interface{})
+
+	//Router settings
+	SaveMatchedRoutePath   bool
+	RedirectTrailingSlash  bool
+	RedirectFixedPath      bool
+	HandleMethodNotAllowed bool
+	HandleOPTIONS          bool
+	GlobalOPTIONS          RequestHandler
+	NotFound               RequestHandler
+	MethodNotAllowed       RequestHandler
+	PanicHandler           func(Context, interface{})
 }
 
 func setDefaults(cfg Config) Config {
@@ -56,7 +67,7 @@ func setDefaults(cfg Config) Config {
 	if cfg.Network == "" {
 		cfg.Network = DefaultNetwork
 	}
-	
+
 	if cfg.Name == "" {
 		cfg.Name = DefaultServerName
 	}
@@ -109,6 +120,10 @@ func newRouter(cfg Config) *fastrouter.Router {
 		return
 	}
 
+	router.RedirectFixedPath = cfg.RedirectFixedPath
+	router.RedirectTrailingSlash = cfg.RedirectTrailingSlash
+	router.HandleMethodNotAllowed = cfg.HandleMethodNotAllowed
+	router.HandleOPTIONS = cfg.HandleOPTIONS
 	router.SaveMatchedRoutePath = cfg.SaveMatchedRoutePath
 
 	return router

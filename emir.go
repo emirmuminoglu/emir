@@ -89,7 +89,7 @@ func (e *Emir) NewVirtualHost(hostname string) Router {
 
 func (e *Emir) Handler() fasthttp.RequestHandler {
 	e.Router.Handler()
-	return func(ctx *fasthttp.RequestCtx) {
+	handler := func(ctx *fasthttp.RequestCtx) {
 		vhost := e.hosts[B2S(ctx.Host())]
 		if vhost != nil {
 			vhost.Handler()(ctx)
@@ -99,6 +99,12 @@ func (e *Emir) Handler() fasthttp.RequestHandler {
 		e.fastrouter.Handler(ctx)
 		return
 	}
+
+	if e.cfg.Compress {
+		handler = fasthttp.CompressHandler(handler)
+	}
+
+	return handler
 }
 
 func (e *Emir) ListenAndServe() error {
@@ -106,6 +112,7 @@ func (e *Emir) ListenAndServe() error {
 	if err != nil {
 		return err
 	}
+
 	if e.cfg.GracefulShutdown {
 		return e.ServeGracefully(ln)
 	}
@@ -133,9 +140,21 @@ func (e *Emir) ServeGracefully(ln net.Listener) error {
 }
 
 func (e *Emir) Serve(ln net.Listener) error {
+	defer ln.Close()
+
 	e.cfg.Addr = ln.Addr().String()
-	e.cfg.Logger.Info("Listening on " + e.cfg.Addr)
+
+	schema := "http://"
+	if e.cfg.TLS {
+		schema = "https://"
+	}
+
+	e.cfg.Logger.Info("Listening on " + schema + e.cfg.Addr)
 	e.server.Handler = e.Handler()
+	if e.cfg.TLS {
+		return e.server.ServeTLS(ln, e.cfg.CertFile, e.cfg.CertKeyFile)
+	}
+
 	return e.server.Serve(ln)
 }
 
