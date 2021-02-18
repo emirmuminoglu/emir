@@ -85,7 +85,7 @@ func (v *virtualHost) Handler() fasthttp.RequestHandler {
 			ctx := acquireCtx(fctx)
 			ctx.route = route
 			ctx.emir = v.emir
-			
+
 			defer func() {
 				for _, deferFunc := range ctx.deferFuncs {
 					deferFunc()
