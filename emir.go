@@ -58,6 +58,15 @@ type Router interface {
 
 	// NewGroup creates a subrouter for given path.
 	NewGroup(path string) Router
+
+	// Validate registers given validator to the router
+	Validate(v Validator)
+
+	// Bind registers given binder to the router
+	Bind(b Binder)
+
+	// HandleError registers given error handler to the router
+	HandleError(handler ErrorHandler)
 }
 
 func New(cfg Config) *Emir {
