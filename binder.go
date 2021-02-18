@@ -26,11 +26,9 @@ func (*DefaultBinder) Bind(c Context, v interface{}) error {
 			if err := json.Unmarshal(c.PostBody(), v); err != nil {
 				return err
 			}
-		case strings.HasPrefix(contentType, ContentTypeApplicationXML):
-			if err := xml.Unmarshal(c.PostBody(), v); err != nil {
-				return err
-			}
-		case strings.HasPrefix(contentType, ContentTypeTextXML):
+		case strings.HasPrefix(contentType, ContentTypeApplicationXML) ||
+			strings.HasPrefix(contentType, ContentTypeTextXML):
+
 			if err := xml.Unmarshal(c.PostBody(), v); err != nil {
 				return err
 			}

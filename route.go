@@ -1,7 +1,7 @@
 package emir
 
 // Route represents a route in router
-// It carries route's path, method, handlers, middlewares and error handlers. 
+// It carries route's path, method, handlers, middlewares and error handlers.
 type Route struct {
 	Path             string
 	Method           string
@@ -9,6 +9,8 @@ type Route struct {
 	Handlers         []RequestHandler
 	AfterMiddlewares []RequestHandler
 	ErrorHandler     ErrorHandler
+	Binder           Binder
+	Validator        Validator
 }
 
 // Use registers given handlers as middleware to the route
@@ -38,4 +40,12 @@ func (r *Route) Handle(handler ...RequestHandler) *Route {
 // HandleError registers given error handlers as error handler to the route
 func (r *Route) HandleError(handler ErrorHandler) {
 	r.ErrorHandler = handler
+}
+
+func (r *Route) Validate(v Validator) {
+	r.Validator = r.Validator
+}
+
+func (r *Route) Bind(b Binder) {
+	r.Binder = r.Binder
 }

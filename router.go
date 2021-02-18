@@ -13,6 +13,8 @@ type router struct {
 	middlewares      []RequestHandler
 	afterMiddlewares []RequestHandler
 	errorHandler     ErrorHandler
+	Binder           Binder
+	Validator        Validator
 }
 
 func (r *router) Handle(path string, method string, handlers ...RequestHandler) *Route {
@@ -21,10 +23,20 @@ func (r *router) Handle(path string, method string, handlers ...RequestHandler) 
 		Method:       method,
 		Handlers:     handlers,
 		ErrorHandler: r.errorHandler,
+		Validator:    r.Validator,
+		Binder:       r.Binder,
 	}
 	r.routes = append(r.routes, route)
 
 	return route
+}
+
+func (r *router) Validate(v Validator) {
+	r.Validator = r.Validator
+}
+
+func (r *router) Bind(b Binder) {
+	r.Binder = r.Binder
 }
 
 func (r *router) Use(handlers ...RequestHandler) Router {
