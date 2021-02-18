@@ -82,19 +82,71 @@ func (c ctx) RespHeader() *fasthttp.ResponseHeader {
 	return &c.Response.Header
 }
 
-func (c *ctx) JSON(v interface{}) error {
+func (c *ctx) JSON(v interface{}, statusCode ...int) error {
 	bytes, err := json.Marshal(v)
 	if err != nil {
 		return err
 	}
 
-	c.SetBody(bytes)
+	c.setStatus(statusCode...)
+
+	c.json(bytes)
+
 	return nil
+}
+
+func (c *ctx) JSONMarshaler(v json.Marshaler, statusCode ...int) error {
+	bytes, err := v.MarshalJSON()
+	if err != nil {
+		return err
+	}
+
+	c.setStatus(statusCode...)
+
+	c.json(bytes)
+	return nil
+}
+
+func (c *ctx) HTML(v string, statusCode ...int) error {
+	c.setStatus(statusCode...)
+
+	c.SetBody(S2B(v))
+	c.SetContentType(ContentTypeTextHTML)
+
+	return nil
+}
+
+func (c *ctx) HTMLBytes(v []byte, statusCode ...int) error {
+	c.setStatus(statusCode...)
+
+	c.SetBody(v)
+	c.SetContentType(ContentTypeTextHTML)
+
+	return nil
+}
+
+func (c *ctx) Validate(v interface{}) error {
+	return c.route.Validator.Validate(v)
+}
+
+func (c *ctx) Bind(v interface{}) error {
+	return c.route.Binder.Bind(c, v)
 }
 
 func (c *ctx) Next() error {
 	c.next = true
 	return nil
+}
+
+func (c *ctx) setStatus(code ...int) {
+	if len(code) != 0 {
+		c.SetStatusCode(code[0])
+	}
+}
+
+func (c *ctx) json(v []byte) {
+	c.SetBody(v)
+	c.SetContentType(ContentTypeApplicationJSON)
 }
 
 //Context context wrapper of fasthttp.RequestCtx to adds extra functionality
@@ -183,6 +235,15 @@ type Context interface {
 	ReqHeader() *fasthttp.RequestHeader
 	Resp() *fasthttp.Response
 	RespHeader() *fasthttp.ResponseHeader
-	JSON(v interface{}) error
 	Next() error
+
+	//Responses
+	JSON(v interface{}, statusCode ...int) error
+	JSONMarshaler(v json.Marshaler, statusCode ...int) error
+	HTML(v string, statusCode ...int) error
+	HTMLBytes(v []byte, statusCode ...int) error
+
+	//Binde and Validate
+	Bind(v interface{}) error
+	Validate(v interface{}) error
 }
