@@ -17,28 +17,28 @@ type virtualHost struct {
 	Validator        Validator
 }
 
-func (v *virtualHost) Handle(path string, method string, handlers ...RequestHandler) *Route {
+func (vh *virtualHost) Handle(path string, method string, handlers ...RequestHandler) *Route {
 	route := &Route{
 		Path:         path,
 		Method:       method,
 		Handlers:     handlers,
-		ErrorHandler: v.errorHandler,
-		Validator:    v.Validator,
-		Binder:       v.Binder,
+		ErrorHandler: vh.errorHandler,
+		Validator:    vh.Validator,
+		Binder:       vh.Binder,
 	}
-	v.routes = append(v.routes, route)
+	vh.routes = append(vh.routes, route)
 
 	return route
 }
 
-func (v *virtualHost) Use(handlers ...RequestHandler) Router {
-	if v.middlewares == nil {
-		v.middlewares = []RequestHandler{}
+func (vh *virtualHost) Use(handlers ...RequestHandler) Router {
+	if vh.middlewares == nil {
+		vh.middlewares = []RequestHandler{}
 	}
 
-	v.middlewares = append(v.middlewares, handlers...)
+	vh.middlewares = append(vh.middlewares, handlers...)
 
-	return v
+	return vh
 }
 
 func (vh *virtualHost) Validate(v Validator) {
@@ -49,54 +49,54 @@ func (vh *virtualHost) Bind(b Binder) {
 	vh.Binder = b
 }
 
-func (v *virtualHost) After(handlers ...RequestHandler) Router {
-	if v.middlewares == nil {
-		v.middlewares = []RequestHandler{}
+func (vh *virtualHost) After(handlers ...RequestHandler) Router {
+	if vh.middlewares == nil {
+		vh.middlewares = []RequestHandler{}
 	}
 
-	v.afterMiddlewares = append(v.afterMiddlewares, handlers...)
+	vh.afterMiddlewares = append(vh.afterMiddlewares, handlers...)
 
-	return v
+	return vh
 }
 
-func (v *virtualHost) HandleError(handler ErrorHandler) {
-	v.errorHandler = handler
+func (vh *virtualHost) HandleError(handler ErrorHandler) {
+	vh.errorHandler = handler
 }
 
-func (v *virtualHost) GET(path string, handlers ...RequestHandler) *Route {
-	return v.Handle(path, MethodGet, handlers...)
+func (vh *virtualHost) GET(path string, handlers ...RequestHandler) *Route {
+	return vh.Handle(path, MethodGet, handlers...)
 }
 
-func (v *virtualHost) POST(path string, handlers ...RequestHandler) *Route {
-	return v.Handle(path, MethodPost, handlers...)
+func (vh *virtualHost) POST(path string, handlers ...RequestHandler) *Route {
+	return vh.Handle(path, MethodPost, handlers...)
 }
 
-func (v *virtualHost) PUT(path string, handlers ...RequestHandler) *Route {
-	return v.Handle(path, MethodPut, handlers...)
+func (vh *virtualHost) PUT(path string, handlers ...RequestHandler) *Route {
+	return vh.Handle(path, MethodPut, handlers...)
 }
 
-func (v *virtualHost) PATCH(path string, handlers ...RequestHandler) *Route {
-	return v.Handle(path, MethodPatch, handlers...)
+func (vh *virtualHost) PATCH(path string, handlers ...RequestHandler) *Route {
+	return vh.Handle(path, MethodPatch, handlers...)
 }
 
-func (v *virtualHost) DELETE(path string, handlers ...RequestHandler) *Route {
-	return v.Handle(path, MethodDelete, handlers...)
+func (vh *virtualHost) DELETE(path string, handlers ...RequestHandler) *Route {
+	return vh.Handle(path, MethodDelete, handlers...)
 }
 
-func (v *virtualHost) HEAD(path string, handlers ...RequestHandler) *Route {
-	return v.Handle(path, MethodHead, handlers...)
+func (vh *virtualHost) HEAD(path string, handlers ...RequestHandler) *Route {
+	return vh.Handle(path, MethodHead, handlers...)
 }
 
-func (v *virtualHost) TRACE(path string, handlers ...RequestHandler) *Route {
-	return v.Handle(path, MethodTrace, handlers...)
+func (vh *virtualHost) TRACE(path string, handlers ...RequestHandler) *Route {
+	return vh.Handle(path, MethodTrace, handlers...)
 }
 
-func (v *virtualHost) Handler() fasthttp.RequestHandler {
-	for _, route := range v.routes {
-		v.Router.Handle(route.Method, route.Path, func(fctx *fasthttp.RequestCtx) {
+func (vh *virtualHost) Handler() fasthttp.RequestHandler {
+	for _, route := range vh.routes {
+		vh.Router.Handle(route.Method, route.Path, func(fctx *fasthttp.RequestCtx) {
 			ctx := acquireCtx(fctx)
 			ctx.route = route
-			ctx.emir = v.emir
+			ctx.emir = vh.emir
 
 			defer func() {
 				for _, deferFunc := range ctx.deferFuncs {
@@ -105,7 +105,7 @@ func (v *virtualHost) Handler() fasthttp.RequestHandler {
 				releaseCtx(ctx)
 			}()
 
-			for _, handler := range v.middlewares {
+			for _, handler := range vh.middlewares {
 				ctx.next = false
 				if err := handler(ctx); err != nil {
 					route.ErrorHandler(ctx, err)
@@ -153,7 +153,7 @@ func (v *virtualHost) Handler() fasthttp.RequestHandler {
 				}
 			}
 
-			for _, handler := range v.afterMiddlewares {
+			for _, handler := range vh.afterMiddlewares {
 				ctx.next = false
 				if err := handler(ctx); err != nil {
 					route.ErrorHandler(ctx, err)
@@ -167,18 +167,18 @@ func (v *virtualHost) Handler() fasthttp.RequestHandler {
 		})
 	}
 
-	return v.Router.Handler
+	return vh.Router.Handler
 }
 
-func (v *virtualHost) NewGroup(path string) Router {
+func (vh *virtualHost) NewGroup(path string) Router {
 	newRouter := &router{
-		Group:            v.Router.Group(path),
-		middlewares:      v.middlewares,
-		afterMiddlewares: v.afterMiddlewares,
-		errorHandler:     v.errorHandler,
+		Group:            vh.Router.Group(path),
+		middlewares:      vh.middlewares,
+		afterMiddlewares: vh.afterMiddlewares,
+		errorHandler:     vh.errorHandler,
 	}
 
-	v.subRouters = append(v.subRouters, newRouter)
+	vh.subRouters = append(vh.subRouters, newRouter)
 
 	return newRouter
 }
