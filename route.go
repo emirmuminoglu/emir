@@ -43,9 +43,9 @@ func (r *Route) HandleError(handler ErrorHandler) {
 }
 
 func (r *Route) Validate(v Validator) {
-	r.Validator = r.Validator
+	r.Validator = v
 }
 
 func (r *Route) Bind(b Binder) {
-	r.Binder = r.Binder
+	r.Binder = b
 }
