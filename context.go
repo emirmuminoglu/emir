@@ -138,6 +138,14 @@ func (c *ctx) Next() error {
 	return nil
 }
 
+func (c *ctx) PlainString(v string, statusCode ...int) error {
+	c.setStatus(statusCode...)
+
+	c.SetBody(S2B(v))
+	c.SetContentType(ContentTypeTextPlain)
+	return nil
+}
+
 func (c *ctx) setStatus(code ...int) {
 	if len(code) != 0 {
 		c.SetStatusCode(code[0])
@@ -242,6 +250,7 @@ type Context interface {
 	JSONMarshaler(v json.Marshaler, statusCode ...int) error
 	HTML(v string, statusCode ...int) error
 	HTMLBytes(v []byte, statusCode ...int) error
+	PlainString(v string, statusCode ...int) error
 
 	//Binde and Validate
 	Bind(v interface{}) error
