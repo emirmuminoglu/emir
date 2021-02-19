@@ -26,6 +26,8 @@ func acquireCtx(fctx *fasthttp.RequestCtx) *ctx {
 	v := ctxPool.Get()
 	if v == nil {
 		c = new(ctx)
+	} else {
+		c = v.(*ctx)
 	}
 
 	c.RequestCtx = fctx
@@ -36,6 +38,16 @@ func acquireCtx(fctx *fasthttp.RequestCtx) *ctx {
 //
 // It is forbidden accessing to ctx after releaseing it
 func releaseCtx(c *ctx) {
+	c.RequestCtx = nil
+	c.next = false
+	c.err = false
+	c.deferFuncs = nil
+	c.route = nil
+	c.emir = nil
+	c.stdURL = nil
+
+	ctxPool.Put(c)
+
 	return
 }
 
