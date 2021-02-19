@@ -30,7 +30,7 @@ func S2B(s string) (b []byte) {
 
 // ConvertArgsToValues converts given fasthttp.Args to url.Values
 func ConvertArgsToValues(args *fasthttp.Args) url.Values {
-	var values url.Values
+	values := make(url.Values)
 	args.VisitAll(func(key, value []byte) {
 		keyStr := B2S(key)
 		values[keyStr] = append(values[keyStr], B2S(value))
