@@ -90,6 +90,10 @@ func New(cfg Config) *Emir {
 
 // NewVirtualHost creates a new router group for the provided hostname
 func (e *Emir) NewVirtualHost(hostname string) Router {
+	if e.hosts == nil {
+		e.hosts = map[string]*virtualHost{}
+	}
+
 	frouter := newRouter(e.cfg)
 	v := &virtualHost{
 		emir:         e,
@@ -136,7 +140,7 @@ func (e *Emir) ListenAndServe() error {
 	return e.Serve(ln)
 }
 
-// ServeGracefully serves gracefully the server with given listener.  
+// ServeGracefully serves gracefully the server with given listener.
 func (e *Emir) ServeGracefully(ln net.Listener) error {
 	listenErr := make(chan error, 1)
 
