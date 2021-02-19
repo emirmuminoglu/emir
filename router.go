@@ -135,7 +135,7 @@ func (r *router) Handler() fasthttp.RequestHandler {
 				}
 			}
 
-			for _, handler := range route.Middlewares {
+			for _, handler := range route.AfterMiddlewares {
 				ctx.next = false
 				if err := handler(ctx); err != nil {
 					route.ErrorHandler(ctx, err)
