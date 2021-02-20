@@ -95,9 +95,6 @@ func (vh *virtualHost) Handler() fasthttp.RequestHandler {
 	for _, route := range vh.routes {
 		vh.Router.Handle(route.Method, route.Path, func(fctx *fasthttp.RequestCtx) {
 			ctx := acquireCtx(fctx)
-			ctx.route = route
-			ctx.emir = vh.emir
-
 			defer func() {
 				for _, deferFunc := range ctx.deferFuncs {
 					deferFunc()
@@ -105,55 +102,15 @@ func (vh *virtualHost) Handler() fasthttp.RequestHandler {
 				releaseCtx(ctx)
 			}()
 
-			for _, handler := range vh.middlewares {
-				ctx.next = false
-				if err := handler(ctx); err != nil {
-					route.ErrorHandler(ctx, err)
-					return
-				}
+			ctx.route = route
+			ctx.emir = vh.emir
 
-				if !ctx.next {
-					return
-				}
-			}
+			chain := append(vh.middlewares, route.Middlewares...)
+			chain = append(chain, route.Handlers...)
+			chain = append(chain, route.AfterMiddlewares...)
+			chain = append(chain, vh.afterMiddlewares...)
 
-			for _, handler := range route.Middlewares {
-				ctx.next = false
-				if err := handler(ctx); err != nil {
-					route.ErrorHandler(ctx, err)
-					return
-				}
-
-				if !ctx.next {
-					return
-				}
-			}
-
-			for _, handler := range route.Handlers {
-				ctx.next = false
-				if err := handler(ctx); err != nil {
-					route.ErrorHandler(ctx, err)
-					return
-				}
-
-				if !ctx.next {
-					return
-				}
-			}
-
-			for _, handler := range route.Middlewares {
-				ctx.next = false
-				if err := handler(ctx); err != nil {
-					route.ErrorHandler(ctx, err)
-					return
-				}
-
-				if !ctx.next {
-					return
-				}
-			}
-
-			for _, handler := range vh.afterMiddlewares {
+			for _, handler := range chain {
 				ctx.next = false
 				if err := handler(ctx); err != nil {
 					route.ErrorHandler(ctx, err)
@@ -165,6 +122,10 @@ func (vh *virtualHost) Handler() fasthttp.RequestHandler {
 				}
 			}
 		})
+	}
+
+	for _, subrouter := range vh.subRouters {
+		subrouter.Handler()
 	}
 
 	return vh.Router.Handler

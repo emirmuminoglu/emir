@@ -95,59 +95,22 @@ func (r *router) Handler() fasthttp.RequestHandler {
 	for _, route := range r.routes {
 		r.Group.Handle(route.Method, route.Path, func(fctx *fasthttp.RequestCtx) {
 			ctx := acquireCtx(fctx)
-			defer releaseCtx(ctx)
+			defer func() {
+				for _, deferFunc := range ctx.deferFuncs {
+					deferFunc()
+				}
+				releaseCtx(ctx)
+			}()
+
 			ctx.route = route
 			ctx.emir = r.emir
 
-			for _, handler := range r.middlewares {
-				ctx.next = false
-				if err := handler(ctx); err != nil {
-					route.ErrorHandler(ctx, err)
-					return
-				}
+			chain := append(r.middlewares, route.Middlewares...)
+			chain = append(chain, route.Handlers...)
+			chain = append(chain, route.AfterMiddlewares...)
+			chain = append(chain, r.afterMiddlewares...)
 
-				if !ctx.next {
-					return
-				}
-			}
-
-			for _, handler := range route.Middlewares {
-				ctx.next = false
-				if err := handler(ctx); err != nil {
-					route.ErrorHandler(ctx, err)
-					return
-				}
-
-				if !ctx.next {
-					return
-				}
-			}
-
-			for _, handler := range route.Handlers {
-				ctx.next = false
-				if err := handler(ctx); err != nil {
-					route.ErrorHandler(ctx, err)
-					return
-				}
-
-				if !ctx.next {
-					return
-				}
-			}
-
-			for _, handler := range route.AfterMiddlewares {
-				ctx.next = false
-				if err := handler(ctx); err != nil {
-					route.ErrorHandler(ctx, err)
-					return
-				}
-
-				if !ctx.next {
-					return
-				}
-			}
-
-			for _, handler := range r.afterMiddlewares {
+			for _, handler := range chain {
 				ctx.next = false
 				if err := handler(ctx); err != nil {
 					route.ErrorHandler(ctx, err)
