@@ -67,7 +67,7 @@ func (c *ctx) Route() *Route {
 }
 
 func (c *ctx) Logger() *zap.Logger {
-	return c.emir.cfg.Logger
+	return c.emir.Logger
 }
 
 func (c *ctx) FasthttpCtx() *fasthttp.RequestCtx {
@@ -187,8 +187,6 @@ type Context interface {
 	Host() []byte
 	ID() uint64
 	IfModifiedSince(lastModified time.Time) bool
-	Init(req *fasthttp.Request, remoteAddr net.Addr, logger fasthttp.Logger)
-	Init2(conn net.Conn, logger fasthttp.Logger, reduceMemoryUsage bool)
 	IsBodyStream() bool
 	IsConnect() bool
 	IsDelete() bool
@@ -248,13 +246,18 @@ type Context interface {
 	VisitUserValues(visitor func([]byte, interface{}))
 	Write(p []byte) (int, error)
 	WriteString(s string) (int, error)
+
 	Route() *Route
+
 	FasthttpCtx() *fasthttp.RequestCtx
 	Emir() *Emir
+
 	Req() *fasthttp.Request
 	ReqHeader() *fasthttp.RequestHeader
+
 	Resp() *fasthttp.Response
 	RespHeader() *fasthttp.ResponseHeader
+
 	Next() error
 
 	//Responses

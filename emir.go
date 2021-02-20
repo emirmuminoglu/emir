@@ -8,6 +8,7 @@ import (
 
 	fastrouter "github.com/fasthttp/router"
 	"github.com/valyala/fasthttp"
+	"go.uber.org/zap"
 )
 
 // Emir is the top-level framework instance
@@ -17,6 +18,7 @@ type Emir struct {
 	errorHandler ErrorHandler
 	hosts        map[string]*virtualHost
 	cfg          Config
+	Logger       *zap.Logger
 	Router
 }
 
@@ -82,8 +84,9 @@ func New(cfg Config) *Emir {
 		fastrouter:   frouter,
 		errorHandler: cfg.ErrorHandler,
 		cfg:          cfg,
+		Logger:       cfg.Logger,
 	}
-
+	
 	emir.Router = &router{emir: emir, errorHandler: cfg.ErrorHandler, Group: frouter.Group("")}
 	return emir
 }
@@ -155,7 +158,7 @@ func (e *Emir) ServeGracefully(ln net.Listener) error {
 	case err := <-listenErr:
 		return err
 	case <-osSignals:
-		e.cfg.Logger.Info("Shutdown signal received")
+		e.Logger.Info("Shutdown signal received")
 		return e.Shutdown()
 	}
 }
@@ -171,7 +174,7 @@ func (e *Emir) Serve(ln net.Listener) error {
 		schema = "https://"
 	}
 
-	e.cfg.Logger.Info("Listening on " + schema + e.cfg.Addr)
+	e.Logger.Info("Listening on " + schema + e.cfg.Addr)
 	e.server.Handler = e.Handler()
 	if e.cfg.TLS {
 		return e.server.ServeTLS(ln, e.cfg.CertFile, e.cfg.CertKeyFile)
