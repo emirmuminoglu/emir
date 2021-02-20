@@ -19,6 +19,7 @@ type router struct {
 
 func (r *router) Handle(path string, method string, handlers ...RequestHandler) *Route {
 	route := &Route{
+		RouteName:    path,
 		Path:         path,
 		Method:       method,
 		Handlers:     handlers,

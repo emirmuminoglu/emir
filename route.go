@@ -3,6 +3,7 @@ package emir
 // Route represents a route in router
 // It carries route's path, method, handlers, middlewares and error handlers.
 type Route struct {
+	RouteName        string
 	Path             string
 	Method           string
 	Middlewares      []RequestHandler
@@ -50,4 +51,11 @@ func (r *Route) Validate(v Validator) {
 // Bind registers given binder as binder to the route
 func (r *Route) Bind(b Binder) {
 	r.Binder = b
+}
+
+// Name sets route name
+func (r *Route) Name(name string) *Route {
+	r.RouteName = name
+
+	return r
 }

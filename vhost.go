@@ -19,6 +19,7 @@ type virtualHost struct {
 
 func (vh *virtualHost) Handle(path string, method string, handlers ...RequestHandler) *Route {
 	route := &Route{
+		RouteName:    path,
 		Path:         path,
 		Method:       method,
 		Handlers:     handlers,
