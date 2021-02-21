@@ -26,9 +26,14 @@ func (*DefaultBinder) Bind(c Context, v interface{}) error {
 	contentType := B2S(req.Header.ContentType())
 
 	if req.Header.IsPost() || req.Header.IsPut() || req.Header.IsPatch() {
-
 		switch {
 		case strings.HasPrefix(contentType, ContentTypeApplicationJSON):
+			if marshaler, ok := v.(json.Unmarshaler); ok {
+				if err := marshaler.UnmarshalJSON(c.PostBody()); err != nil {
+					return err
+				}
+			}
+
 			if err := json.Unmarshal(c.PostBody(), v); err != nil {
 				return err
 			}
