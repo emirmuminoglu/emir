@@ -86,8 +86,8 @@ func New(cfg Config) *Emir {
 		cfg:          cfg,
 		Logger:       cfg.Logger,
 	}
-	
-	emir.Router = &router{emir: emir, errorHandler: cfg.ErrorHandler, Group: frouter.Group("")}
+
+	emir.Router = &router{Binder: &DefaultBinder{}, emir: emir, errorHandler: cfg.ErrorHandler, Group: frouter.Group("")}
 	return emir
 }
 
