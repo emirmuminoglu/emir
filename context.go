@@ -145,6 +145,10 @@ func (c *ctx) Bind(v interface{}) error {
 	return c.route.Binder.Bind(c, v)
 }
 
+func (c *ctx) RequestID() []byte {
+	return c.ReqHeader().Peek(HeaderXRequestID)
+}
+
 func (c *ctx) Next() error {
 	c.next = true
 	return nil
@@ -270,4 +274,6 @@ type Context interface {
 	//Binde and Validate
 	Bind(v interface{}) error
 	Validate(v interface{}) error
+
+	RequestID() []byte
 }

@@ -161,6 +161,7 @@ const (
 	HeaderXRequestedWith      = "X-Requested-With"
 	HeaderXRobotsTag          = "X-Robots-Tag"
 	HeaderXUACompatible       = "X-UA-Compatible"
+	HeaderXRequestID          = "X-Request-ID"
 )
 
 // HTTP methods were copied from net/http.
