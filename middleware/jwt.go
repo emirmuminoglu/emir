@@ -106,6 +106,10 @@ func NewJWTWithCustomClaims(cfg JWTWithCustomConfig) emir.RequestHandler {
 	switch cfg.Algo {
 	case "hs256":
 		parser = jwt.ParseHS256Custom
+	case "hs384":
+		parser = jwt.ParseHS384Custom
+	case "hs512":
+		parser = jwt.ParseHS512Custom
 	}
 
 	switch cfg.TokenLookupIn {
