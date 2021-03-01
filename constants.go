@@ -256,3 +256,7 @@ const (
 	ContentTypeTextHTML        = "text/html"
 	ContentTypeTextPlain       = "text/plain"
 )
+
+const (
+	requestIDLogKey = "requestId"
+)

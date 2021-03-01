@@ -7,11 +7,11 @@ import (
 )
 
 func Test_New(t *testing.T) {
-	notFoundHandler := func(c Context) error {
+	notFoundHandler := func(c *Context) error {
 		return nil
 	}
 
-	methodNotAllowedHandler := func(c Context) error {
+	methodNotAllowedHandler := func(c *Context) error {
 		return nil
 	}
 
@@ -39,21 +39,21 @@ func Test_Handlers(t *testing.T) {
 		middlewareExecuted       bool
 	)
 
-	notFoundHandler := func(c Context) error {
+	notFoundHandler := func(c *Context) error {
 		notFoundExecuted = true
 		return nil
 	}
 
-	methodNotAllowedHandler := func(c Context) error {
+	methodNotAllowedHandler := func(c *Context) error {
 		methodNotAllowedExecuted = true
 		return nil
 	}
 
-	errorHandler := func(c Context, err error) {
+	errorHandler := func(c *Context, err error) {
 		errorHandlerExecuted = true
 	}
 
-	middleware := func(c Context) error {
+	middleware := func(c *Context) error {
 		middlewareExecuted = true
 		return NewBasicError(200, "test")
 	}
@@ -67,7 +67,7 @@ func Test_Handlers(t *testing.T) {
 
 	e := New(cfg)
 
-	e.GET("/test", func(c Context) error {
+	e.GET("/test", func(c *Context) error {
 		return c.Next()
 	}).After(middleware)
 
@@ -112,7 +112,7 @@ func Test_VirtualHosts(t *testing.T) {
 
 	e := New(cfg)
 	vh := e.NewVirtualHost("example.com")
-	vh.GET("/", func(c Context) error {
+	vh.GET("/", func(c *Context) error {
 		handlerExecuted = true
 		return nil
 	})

@@ -1,13 +1,8 @@
 package emir
 
 import (
-	"crypto/tls"
 	"encoding/json"
-	"io"
-	"mime/multipart"
-	"net"
 	"sync"
-	"time"
 
 	stdUrl "net/url"
 
@@ -21,13 +16,13 @@ var ctxPool sync.Pool
 //
 // The returned ctx instance may be passed to ReleaseCtx when it is no longer needed
 // It is forbidden accessing to ctx after releasing it
-func acquireCtx(fctx *fasthttp.RequestCtx) *ctx {
-	var c *ctx
+func acquireCtx(fctx *fasthttp.RequestCtx) *Context {
+	var c *Context
 	v := ctxPool.Get()
 	if v == nil {
-		c = new(ctx)
+		c = new(Context)
 	} else {
-		c = v.(*ctx)
+		c = v.(*Context)
 	}
 
 	c.RequestCtx = fctx
@@ -37,7 +32,7 @@ func acquireCtx(fctx *fasthttp.RequestCtx) *ctx {
 // releaseCtx returns ctx acquired via AcquireCtx to context pool
 //
 // It is forbidden accessing to ctx after releaseing it
-func releaseCtx(c *ctx) {
+func releaseCtx(c *Context) {
 	c.RequestCtx = nil
 	c.next = false
 	c.err = false
@@ -51,7 +46,8 @@ func releaseCtx(c *ctx) {
 	return
 }
 
-type ctx struct {
+//Context context wrapper of fasthttp.RequestCtx to adds extra functionality
+type Context struct {
 	*fasthttp.RequestCtx
 	next       bool
 	err        bool
@@ -62,39 +58,24 @@ type ctx struct {
 	//TODO: response writer
 }
 
-func (c *ctx) Route() *Route {
+// Route returns the route instance
+func (c *Context) Route() *Route {
 	return c.route
 }
 
-func (c *ctx) Logger() *zap.Logger {
+// Logger returns the logger.
+func (c *Context) Logger() *zap.Logger {
 	return c.emir.Logger
 }
 
-func (c *ctx) FasthttpCtx() *fasthttp.RequestCtx {
-	return c.RequestCtx
-}
-
-func (c *ctx) Emir() *Emir {
+// Emir returns the Emir instance
+func (c *Context) Emir() *Emir {
 	return c.emir
 }
 
-func (c *ctx) Req() *fasthttp.Request {
-	return &c.Request
-}
-
-func (c ctx) ReqHeader() *fasthttp.RequestHeader {
-	return &c.Request.Header
-}
-
-func (c *ctx) Resp() *fasthttp.Response {
-	return &c.Response
-}
-
-func (c ctx) RespHeader() *fasthttp.ResponseHeader {
-	return &c.Response.Header
-}
-
-func (c *ctx) JSON(v interface{}, statusCode ...int) error {
+// JSON sends a JSON response with given status code.
+// Status code is optional.
+func (c *Context) JSON(v interface{}, statusCode ...int) error {
 	bytes, err := json.Marshal(v)
 	if err != nil {
 		return err
@@ -107,7 +88,10 @@ func (c *ctx) JSON(v interface{}, statusCode ...int) error {
 	return nil
 }
 
-func (c *ctx) JSONMarshaler(v json.Marshaler, statusCode ...int) error {
+// JSONMarshaler sends a JSON response with given status code.
+// The value must be compatible with json.Marshaler interface.
+// Status code is optional.
+func (c *Context) JSONMarshaler(v json.Marshaler, statusCode ...int) error {
 	bytes, err := v.MarshalJSON()
 	if err != nil {
 		return err
@@ -119,7 +103,9 @@ func (c *ctx) JSONMarshaler(v json.Marshaler, statusCode ...int) error {
 	return nil
 }
 
-func (c *ctx) HTML(v string, statusCode ...int) error {
+// HTML sends a HTML response with given status code.
+// Status code is optional.
+func (c *Context) HTML(v string, statusCode ...int) error {
 	c.setStatus(statusCode...)
 
 	c.SetBody(S2B(v))
@@ -128,7 +114,9 @@ func (c *ctx) HTML(v string, statusCode ...int) error {
 	return nil
 }
 
-func (c *ctx) HTMLBytes(v []byte, statusCode ...int) error {
+// HTMLBytes sends a HTML response with given status code.
+// Status code is optional.
+func (c *Context) HTMLBytes(v []byte, statusCode ...int) error {
 	c.setStatus(statusCode...)
 
 	c.SetBody(v)
@@ -137,24 +125,35 @@ func (c *ctx) HTMLBytes(v []byte, statusCode ...int) error {
 	return nil
 }
 
-func (c *ctx) Validate(v interface{}) error {
+// Validate validates given value.
+func (c *Context) Validate(v interface{}) error {
 	return c.route.Validator.Validate(v)
 }
 
-func (c *ctx) Bind(v interface{}) error {
+// Bind binds the request body into given value.
+func (c *Context) Bind(v interface{}) error {
 	return c.route.Binder.Bind(c, v)
 }
 
-func (c *ctx) RequestID() []byte {
+// RequestID returns the request id.
+func (c *Context) RequestID() []byte {
 	return c.ReqHeader().Peek(HeaderXRequestID)
 }
 
-func (c *ctx) Next() error {
+// ReqIDZap returns the request id as zap.Field.
+func (c *Context) ReqIDZap() zap.Field {
+	return zap.ByteString(requestIDLogKey, c.ReqHeader().Peek(HeaderXRequestID))
+}
+
+// Next executes the next request handler.
+func (c *Context) Next() error {
 	c.next = true
 	return nil
 }
 
-func (c *ctx) PlainString(v string, statusCode ...int) error {
+// PlainString sends a plain text response with given status code.
+// Status code is optional
+func (c *Context) PlainString(v string, statusCode ...int) error {
 	c.setStatus(statusCode...)
 
 	c.SetBody(S2B(v))
@@ -162,118 +161,66 @@ func (c *ctx) PlainString(v string, statusCode ...int) error {
 	return nil
 }
 
-func (c *ctx) setStatus(code ...int) {
+// ReqHeader returns request headers.
+func (c *Context) ReqHeader() *fasthttp.RequestHeader {
+	return &c.Request.Header
+}
+
+// RespHeader returns response headers.
+func (c *Context) RespHeader() *fasthttp.ResponseHeader {
+	return &c.Response.Header
+}
+
+// LogDPanic logs a message at DPanicLevel. The message includes any fields passed at the log site, as well as any fields accumulated on the logger.
+// If the logger is in development mode, it then panics (DPanic means "development panic"). This is useful for catching errors that are recoverable, but shouldn't ever happen.
+func (c *Context) LogDPanic(msg string, fields ...zap.Field) {
+	fields = append(fields, c.ReqIDZap())
+	c.Logger().DPanic(msg, fields...)
+}
+
+// LogDebug logs a message at DebugLevel. The message includes any fields passed at the log site, as well as any fields accumulated on the logger.
+func (c *Context) LogDebug(msg string, fields ...zap.Field) {
+	fields = append(fields, c.ReqIDZap())
+	c.Logger().Debug(msg, fields...)
+}
+
+// LogError logs a message at ErrorLevel. The message includes any fields passed at the log site, as well as any fields accumulated on the logger.
+func (c *Context) LogError(msg string, fields ...zap.Field) {
+	fields = append(fields, c.ReqIDZap())
+	c.Logger().Error(msg, fields...)
+}
+
+// LogFatal logs a message at FatalLevel. The message includes any fields passed at the log site, as well as any fields accumulated on the logger.
+func (c *Context) LogFatal(msg string, fields ...zap.Field) {
+	fields = append(fields, c.ReqIDZap())
+	c.Logger().Fatal(msg, fields...)
+}
+
+// LogInfo logs a message at InfoLevel. The message includes any fields passed at the log site, as well as any fields accumulated on the logger.
+func (c *Context) LogInfo(msg string, fields ...zap.Field) {
+	fields = append(fields, c.ReqIDZap())
+	c.Logger().Info(msg, fields...)
+}
+
+// LogPanic logs a message at PanicLevel. The message includes any fields passed at the log site, as well as any fields accumulated on the logger.
+func (c *Context) LogPanic(msg string, fields ...zap.Field) {
+	fields = append(fields, c.ReqIDZap())
+	c.Logger().Panic(msg, fields...)
+}
+
+// LogWarn logs a message at WarnLevel. The message includes any fields passed at the log site, as well as any fields accumulated on the logger.
+func (c *Context) LogWarn(msg string, fields ...zap.Field) {
+	fields = append(fields, c.ReqIDZap())
+	c.Logger().Warn(msg, fields...)
+}
+
+func (c *Context) setStatus(code ...int) {
 	if len(code) != 0 {
 		c.SetStatusCode(code[0])
 	}
 }
 
-func (c *ctx) json(v []byte) {
+func (c *Context) json(v []byte) {
 	c.SetBody(v)
 	c.SetContentType(ContentTypeApplicationJSON)
-}
-
-//Context context wrapper of fasthttp.RequestCtx to adds extra functionality
-type Context interface {
-	Conn() net.Conn
-	ConnID() uint64
-	ConnRequestNum() uint64
-	ConnTime() time.Time
-	Deadline() (deadline time.Time, ok bool)
-	Done() <-chan struct{}
-	Err() error
-	Error(msg string, statusCode int)
-	FormFile(key string) (*multipart.FileHeader, error)
-	FormValue(key string) []byte
-	Hijack(handler fasthttp.HijackHandler)
-	HijackSetNoResponse(noResponse bool)
-	Hijacked() bool
-	Host() []byte
-	ID() uint64
-	IfModifiedSince(lastModified time.Time) bool
-	IsBodyStream() bool
-	IsConnect() bool
-	IsDelete() bool
-	IsGet() bool
-	IsHead() bool
-	IsOptions() bool
-	IsPatch() bool
-	IsPost() bool
-	IsPut() bool
-	IsTLS() bool
-	IsTrace() bool
-	LastTimeoutErrorResponse() *fasthttp.Response
-	LocalAddr() net.Addr
-	LocalIP() net.IP
-	Logger() *zap.Logger
-	Method() []byte
-	MultipartForm() (*multipart.Form, error)
-	NotFound()
-	NotModified()
-	Path() []byte
-	PostArgs() *fasthttp.Args
-	PostBody() []byte
-	QueryArgs() *fasthttp.Args
-	Redirect(uri string, statusCode int)
-	RedirectBytes(uri []byte, statusCode int)
-	Referer() []byte
-	RemoteAddr() net.Addr
-	RemoteIP() net.IP
-	RequestBodyStream() io.Reader
-	RequestURI() []byte
-	ResetBody()
-	SendFile(path string)
-	SendFileBytes(path []byte)
-	SetBody(body []byte)
-	SetBodyStream(bodyStream io.Reader, bodySize int)
-	SetBodyStreamWriter(sw fasthttp.StreamWriter)
-	SetBodyString(body string)
-	SetConnectionClose()
-	SetContentType(contentType string)
-	SetContentTypeBytes(contentType []byte)
-	SetStatusCode(statusCode int)
-	SetUserValue(key string, value interface{})
-	SetUserValueBytes(key []byte, value interface{})
-	String() string
-	Success(contentType string, body []byte)
-	SuccessString(contentType, body string)
-	TLSConnectionState() *tls.ConnectionState
-	Time() time.Time
-	TimeoutError(msg string)
-	TimeoutErrorWithCode(msg string, statusCode int)
-	TimeoutErrorWithResponse(resp *fasthttp.Response)
-	URI() *fasthttp.URI
-	UserAgent() []byte
-	UserValue(key string) interface{}
-	UserValueBytes(key []byte) interface{}
-	Value(key interface{}) interface{}
-	VisitUserValues(visitor func([]byte, interface{}))
-	Write(p []byte) (int, error)
-	WriteString(s string) (int, error)
-
-	Route() *Route
-
-	FasthttpCtx() *fasthttp.RequestCtx
-	Emir() *Emir
-
-	Req() *fasthttp.Request
-	ReqHeader() *fasthttp.RequestHeader
-
-	Resp() *fasthttp.Response
-	RespHeader() *fasthttp.ResponseHeader
-
-	Next() error
-
-	//Responses
-	JSON(v interface{}, statusCode ...int) error
-	JSONMarshaler(v json.Marshaler, statusCode ...int) error
-	HTML(v string, statusCode ...int) error
-	HTMLBytes(v []byte, statusCode ...int) error
-	PlainString(v string, statusCode ...int) error
-
-	//Binde and Validate
-	Bind(v interface{}) error
-	Validate(v interface{}) error
-
-	RequestID() []byte
 }

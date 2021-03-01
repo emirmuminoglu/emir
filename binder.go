@@ -10,7 +10,7 @@ import (
 
 // Binder is the interface that wraps the Bind method.
 type Binder interface {
-	Bind(c Context, v interface{}) error
+	Bind(c *Context, v interface{}) error
 }
 
 // DefaultBinder is the default implementation of the Binder interface.
@@ -21,11 +21,10 @@ type DefaultBinder struct {
 // Binder will bind the body first then binds the query params
 // If the request method is not POST, PUT or PATCH then the binder will skip the body
 // Struct tag for query params will be "qs".
-func (*DefaultBinder) Bind(c Context, v interface{}) error {
-	req := c.Req()
-	contentType := B2S(req.Header.ContentType())
+func (*DefaultBinder) Bind(c *Context, v interface{}) error {
+	contentType := B2S(c.ReqHeader().ContentType())
 
-	if req.Header.IsPost() || req.Header.IsPut() || req.Header.IsPatch() {
+	if c.IsPost() || c.IsPut() || c.IsPatch() {
 		switch {
 		case strings.HasPrefix(contentType, ContentTypeApplicationJSON):
 			if marshaler, ok := v.(json.Unmarshaler); ok {
@@ -44,7 +43,7 @@ func (*DefaultBinder) Bind(c Context, v interface{}) error {
 				return err
 			}
 		case strings.HasPrefix(contentType, ContentTypeApplicationForm):
-			if err := qs.UnmarshalValues(v, ConvertArgsToValues(c.QueryArgs())); err != nil {
+			if err := qs.UnmarshalValues(v, ConvertArgsToValues(c.PostArgs())); err != nil {
 				return err
 			}
 		}

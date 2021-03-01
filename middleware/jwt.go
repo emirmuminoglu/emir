@@ -20,7 +20,7 @@ type JWTConfig struct {
 }
 
 func NewJWT(cfg JWTConfig) emir.RequestHandler {
-	var extractor func(ctx emir.Context) []byte
+	var extractor func(ctx *emir.Context) []byte
 	var parser func(key, token []byte, claims *jwt.Claims) error
 	var pool sync.Pool
 	var zeroClaims = &jwt.Claims{}
@@ -50,7 +50,7 @@ func NewJWT(cfg JWTConfig) emir.RequestHandler {
 
 	switch cfg.TokenLookupIn {
 	case "header":
-		extractor = func(ctx emir.Context) []byte {
+		extractor = func(ctx *emir.Context) []byte {
 			rawHeader := ctx.ReqHeader().Peek(cfg.TokenLookupName)
 			splitted := bytes.Split(rawHeader, spaceByte)
 			if len(splitted) != 2 {
@@ -64,12 +64,12 @@ func NewJWT(cfg JWTConfig) emir.RequestHandler {
 			return splitted[1]
 		}
 	case "cookie":
-		extractor = func(ctx emir.Context) []byte {
+		extractor = func(ctx *emir.Context) []byte {
 			return ctx.ReqHeader().Cookie(cfg.TokenLookupName)
 		}
 	}
 
-	return func(c emir.Context) error {
+	return func(c *emir.Context) error {
 		token := extractor(c)
 		if token == nil {
 			return emir.NewBasicError(401, "missing token")
@@ -100,7 +100,7 @@ type JWTWithCustomConfig struct {
 }
 
 func NewJWTWithCustomClaims(cfg JWTWithCustomConfig) emir.RequestHandler {
-	var extractor func(ctx emir.Context) []byte
+	var extractor func(ctx *emir.Context) []byte
 	var parser func(key, token []byte, claims interface{}, validator jwt.ValidatorFunction) error
 
 	switch cfg.Algo {
@@ -114,7 +114,7 @@ func NewJWTWithCustomClaims(cfg JWTWithCustomConfig) emir.RequestHandler {
 
 	switch cfg.TokenLookupIn {
 	case "header":
-		extractor = func(ctx emir.Context) []byte {
+		extractor = func(ctx *emir.Context) []byte {
 			rawHeader := ctx.ReqHeader().Peek(cfg.TokenLookupName)
 			splitted := bytes.Split(rawHeader, spaceByte)
 			if len(splitted) != 2 {
@@ -128,12 +128,12 @@ func NewJWTWithCustomClaims(cfg JWTWithCustomConfig) emir.RequestHandler {
 			return splitted[1]
 		}
 	case "cookie":
-		extractor = func(ctx emir.Context) []byte {
+		extractor = func(ctx *emir.Context) []byte {
 			return ctx.ReqHeader().Cookie(cfg.TokenLookupName)
 		}
 	}
 
-	return func(c emir.Context) error {
+	return func(c *emir.Context) error {
 		token := extractor(c)
 		if token == nil {
 			return emir.NewBasicError(401, "missing token")

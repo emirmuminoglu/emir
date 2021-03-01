@@ -31,23 +31,23 @@ func DefaultLogger() *zap.Logger {
 }
 
 // DefaultNotFoundHandler is the default not found handler
-func DefaultNotFoundHandler(c Context) error {
+func DefaultNotFoundHandler(c *Context) error {
 	return c.PlainString("Not Found", StatusNotFound)
 }
 
 // DefaultMethodNotAllowed is the default method not allowed handler
-func DefaultMethodNotAllowed(c Context) error {
+func DefaultMethodNotAllowed(c *Context) error {
 	return c.PlainString("Method Not Allowed", StatusMethodNotAllowed)
 }
 
 // DefaultPanicHandler is the default panic handler
-func DefaultPanicHandler(c Context, v interface{}) {
+func DefaultPanicHandler(c *Context, v interface{}) {
 	c.Logger().Error("panic recovered", zap.Any("v", v))
 	c.PlainString("Internal Server Error", StatusInternalServerError)
 }
 
 // DefaultErrorHandler is the default error handler
-func DefaultErrorHandler(ctx Context, err error) {
+func DefaultErrorHandler(ctx *Context, err error) {
 	basicError, ok := err.(*BasicError)
 	if !ok {
 		ctx.SetStatusCode(500)

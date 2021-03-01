@@ -22,8 +22,8 @@ func ConvertToFastHTTPHandler(handler RequestHandler) fasthttp.RequestHandler {
 
 //ConvertFastHTTPHandler converts given fasthttp.RequestHandler to RequestHandler
 func ConvertFastHTTPHandler(handler fasthttp.RequestHandler) RequestHandler {
-	return func(c Context) error {
-		handler(c.FasthttpCtx()) //TODO: error handler
+	return func(c *Context) error {
+		handler(c.RequestCtx) //TODO: error handler
 		return nil
 	}
 }

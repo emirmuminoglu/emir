@@ -34,8 +34,8 @@ func NewCORS(cfg CORSConfig) emir.RequestHandler {
 	exposedHeaders := strings.Join(cfg.ExposedHeaders, strHeaderDelim)
 	maxAge := strconv.Itoa(cfg.AllowMaxAge)
 
-	return func(ctx emir.Context) error {
-		origin := string(ctx.Req().Header.Peek(emir.HeaderOrigin))
+	return func(ctx *emir.Context) error {
+		origin := string(ctx.ReqHeader().Peek(emir.HeaderOrigin))
 		if !isAllowedOrigin(cfg.AllowedOrigins, origin) {
 			return ctx.Next()
 		}
@@ -43,19 +43,19 @@ func NewCORS(cfg CORSConfig) emir.RequestHandler {
 		ctx.RespHeader().Set(emir.HeaderAccessControlAllowOrigin, "true")
 
 		if cfg.AllowCredentials {
-			ctx.Resp().Header.Set(emir.HeaderAccessControlAllowCredentials, "true")
+			ctx.RespHeader().Set(emir.HeaderAccessControlAllowCredentials, "true")
 		}
 
-		varyHeader := ctx.Resp().Header.Peek(emir.HeaderVary)
+		varyHeader := ctx.RespHeader().Peek(emir.HeaderVary)
 		if len(varyHeader) > 0 {
 			varyHeader = append(varyHeader, strHeaderDelim...)
 		}
 
 		varyHeader = append(varyHeader, emir.HeaderOrigin...)
-		ctx.Resp().Header.SetBytesV(emir.HeaderVary, varyHeader)
+		ctx.RespHeader().SetBytesV(emir.HeaderVary, varyHeader)
 
 		if len(cfg.ExposedHeaders) > 0 {
-			ctx.Resp().Header.Set(emir.HeaderVary, exposedHeaders)
+			ctx.RespHeader().Set(emir.HeaderVary, exposedHeaders)
 		}
 
 		if ctx.IsOptions() {
@@ -63,15 +63,15 @@ func NewCORS(cfg CORSConfig) emir.RequestHandler {
 		}
 
 		if len(cfg.AllowedHeaders) > 0 {
-			ctx.Resp().Header.Set(emir.HeaderAccessControlAllowHeaders, allowedHeaders)
+			ctx.RespHeader().Set(emir.HeaderAccessControlAllowHeaders, allowedHeaders)
 		}
 
 		if len(cfg.AllowedMethods) > 0 {
-			ctx.Resp().Header.Set(emir.HeaderAccessControlAllowMethods, allowedMethods)
+			ctx.RespHeader().Set(emir.HeaderAccessControlAllowMethods, allowedMethods)
 		}
 
 		if cfg.AllowMaxAge > 0 {
-			ctx.Resp().Header.Set(emir.HeaderAccessControlMaxAge, maxAge)
+			ctx.RespHeader().Set(emir.HeaderAccessControlMaxAge, maxAge)
 		}
 
 		return ctx.Next()

@@ -9,7 +9,7 @@ import (
 func Test_JSONBind(t *testing.T) {
 	e := New(Config{})
 
-	e.POST("/", func(c Context) error {
+	e.POST("/", func(c *Context) error {
 		v := struct {
 			Test  string `json:"test"`
 			Test1 string `qs:"Test1"`
@@ -38,7 +38,7 @@ func Test_JSONBind(t *testing.T) {
 func Benchmark_JSONBind(b *testing.B) {
 	e := New(Config{})
 
-	e.POST("/bench", func(c Context) error {
+	e.POST("/bench", func(c *Context) error {
 		v := struct {
 			Test  string `json:"Test"`
 			Test1 string `qs:"Test1"`
@@ -70,7 +70,7 @@ func Benchmark_JSONBind(b *testing.B) {
 func Benchmark_XMLBind(b *testing.B) {
 	e := New(Config{})
 
-	e.POST("/", func(c Context) error {
+	e.POST("/", func(c *Context) error {
 		v := struct {
 			Test1 string `qs:"Test1"`
 			Test  string `xml:"test"`
@@ -107,7 +107,7 @@ func Benchmark_XMLBind(b *testing.B) {
 func Test_XMLBind(t *testing.T) {
 	e := New(Config{})
 
-	e.POST("/", func(c Context) error {
+	e.POST("/", func(c *Context) error {
 		v := struct {
 			Test1 string `qs:"Test1"`
 			Test  string `xml:"test"`

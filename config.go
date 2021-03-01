@@ -56,7 +56,7 @@ type Config struct {
 	GlobalOPTIONS          RequestHandler
 	NotFound               RequestHandler
 	MethodNotAllowed       RequestHandler
-	PanicHandler           func(Context, interface{})
+	PanicHandler           func(*Context, interface{})
 }
 
 func setDefaults(cfg Config) Config {

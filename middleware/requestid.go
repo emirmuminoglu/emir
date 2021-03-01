@@ -6,7 +6,7 @@ import (
 )
 
 func NewRequestID() emir.RequestHandler {
-	return func(c emir.Context) error {
+	return func(c *emir.Context) error {
 		c.ReqHeader().Set(emir.HeaderXRequestID, uuid.New().String())
 
 		return c.Next()
