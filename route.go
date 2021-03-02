@@ -1,19 +1,5 @@
 package emir
 
-// Route represents a route in router
-// It carries route's path, method, handlers, middlewares and error handlers.
-type Route struct {
-	RouteName        string
-	Path             string
-	Method           string
-	Middlewares      []RequestHandler
-	Handlers         []RequestHandler
-	AfterMiddlewares []RequestHandler
-	ErrorHandler     ErrorHandler
-	Binder           Binder
-	Validator        Validator
-}
-
 // Use registers given handlers as middleware to the route
 // Given handlers will be executed by given order
 func (r *Route) Use(handlers ...RequestHandler) *Route {

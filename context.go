@@ -4,8 +4,6 @@ import (
 	"encoding/json"
 	"sync"
 
-	stdUrl "net/url"
-
 	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
 )
@@ -44,18 +42,6 @@ func releaseCtx(c *Context) {
 	ctxPool.Put(c)
 
 	return
-}
-
-//Context context wrapper of fasthttp.RequestCtx to adds extra functionality
-type Context struct {
-	*fasthttp.RequestCtx
-	next       bool
-	err        bool
-	deferFuncs []func()
-	route      *Route
-	emir       *Emir
-	stdURL     *stdUrl.URL
-	//TODO: response writer
 }
 
 // Route returns the route instance

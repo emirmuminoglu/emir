@@ -8,15 +8,6 @@ import (
 	"github.com/pasztorpisti/qs"
 )
 
-// Binder is the interface that wraps the Bind method.
-type Binder interface {
-	Bind(c *Context, v interface{}) error
-}
-
-// DefaultBinder is the default implementation of the Binder interface.
-type DefaultBinder struct {
-}
-
 // Bind implements the Binder#Bind function. Binding is done in following order:
 // Binder will bind the body first then binds the query params
 // If the request method is not POST, PUT or PATCH then the binder will skip the body

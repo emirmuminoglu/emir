@@ -2,62 +2,10 @@ package emir
 
 import (
 	fastrouter "github.com/fasthttp/router"
-	"net"
-	"time"
 
 	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
 )
-
-// Config carries configuration for FasthHTTP server and Router
-type Config struct {
-	Network     string
-	Addr        string
-	Compress    bool
-	TLS         bool
-	CertFile    string
-	CertKeyFile string
-
-	GracefulShutdown                   bool
-	ErrorHandler                       ErrorHandler
-	Logger                             *zap.Logger
-	Name                               string
-	Concurrency                        int
-	DisableKeepalive                   bool
-	ReadBufferSize                     int
-	WriteBufferSize                    int
-	ReadTimeout                        time.Duration
-	WriteTimeout                       time.Duration
-	IdleTimeout                        time.Duration
-	MaxConnsPerIP                      int
-	MaxRequestsPerConn                 int
-	MaxKeepaliveDuration               time.Duration
-	TCPKeepalive                       bool
-	TCPKeepalivePeriod                 time.Duration
-	MaxRequestBodySize                 int
-	ReduceMemoryUsage                  bool
-	GetOnly                            bool
-	DisablePreParseMultipartForm       bool
-	LogAllErrors                       bool
-	DisableHeaderNamesNormalizing      bool
-	SleepWhenConcurrencyLimitsExceeded time.Duration
-	NoDefaultServerHeader              bool
-	NoDefaultDate                      bool
-	NoDefaultContentType               bool
-	ConnState                          func(net.Conn, fasthttp.ConnState)
-	KeepHijackedConns                  bool
-
-	//Router settings
-	SaveMatchedRoutePath   bool
-	RedirectTrailingSlash  bool
-	RedirectFixedPath      bool
-	HandleMethodNotAllowed bool
-	HandleOPTIONS          bool
-	GlobalOPTIONS          RequestHandler
-	NotFound               RequestHandler
-	MethodNotAllowed       RequestHandler
-	PanicHandler           func(*Context, interface{})
-}
 
 func setDefaults(cfg Config) Config {
 	if cfg.Addr == "" {
