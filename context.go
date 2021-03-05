@@ -157,6 +157,11 @@ func (c *Context) RespHeader() *fasthttp.ResponseHeader {
 	return &c.Response.Header
 }
 
+// Query returns query parameter by name.
+func (c *Context) Query(key string) string {
+	return B2S(c.QueryArgs().Peek(key))
+}
+
 // LogDPanic logs a message at DPanicLevel. The message includes any fields passed at the log site, as well as any fields accumulated on the logger.
 // If the logger is in development mode, it then panics (DPanic means "development panic"). This is useful for catching errors that are recoverable, but shouldn't ever happen.
 func (c *Context) LogDPanic(msg string, fields ...zap.Field) {
